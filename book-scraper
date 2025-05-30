@@ -1,0 +1,37 @@
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import pandas as pd
+import time
+
+options = webdriver.ChromeOptions()
+options.add_argument("--headless")  
+driver = webdriver.Chrome(options=options)
+driver.get("https://books.toscrape.com/")
+time.sleep(2)
+
+book_data = []
+
+book_elements = driver.find_elements(By.CSS_SELECTOR, "article.product_pod")
+
+for book in book_elements:
+    title = book.find_element(By.CSS_SELECTOR, "h3 a").get_attribute("title")
+    price = book.find_element(By.CSS_SELECTOR, ".price_color").text.replace('£', '')
+    availability = book.find_element(By.CSS_SELECTOR, ".instock.availability").text.strip()
+    
+    rating_element = book.find_element(By.CSS_SELECTOR, ".star-rating")
+    rating = rating_element.get_attribute("class").split()[-1] 
+
+    book_data.append({
+        "Title": title,
+        "Price": price,
+        "Availability": availability,
+        "Rating": rating
+    })
+
+books_df = pd.DataFrame(book_data)
+print(books_df.head())
+
+books_df.to_csv("BooksData.csv", index=False, encoding='utf-8-sig')
+
+driver.quit()
